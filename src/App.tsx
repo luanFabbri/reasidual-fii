@@ -5,29 +5,45 @@ import Button from "react-bootstrap/Button";
 import InputGroup from "react-bootstrap/InputGroup";
 import Table from "react-bootstrap/Table";
 import { NumericFormat } from "react-number-format";
+import { Tab, Tabs } from "react-bootstrap";
 
 function App() {
-  // Variáveis de controle do form
-  const [valorParaInvestir, setValorParaInvestir] = useState(0.0);
-  const [precoDoAtivo, setPrecoDoAtivo] = useState(0.0);
-  const [negativoBonus, setNegativoBonus] = useState(0);
-  const [qtdeMaxAtivosComprados, setQtdeMaxAtivosComprados] = useState(0);
-  const [valorRealDaOperacao, setValorRealDaOperacao] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [tableControl, setTableControl] = useState(0);
-
+  //Interfaces
   interface ResidualInvestigation {
     qtdeAtivo: string;
     valorHipoteticoDoAtivo: string;
     valorHipoteticoTotal: string;
     bonusProxNegociacao: string;
   }
-
   interface LossInvestigation {
     valorHipoteticoDoAtivo: string;
     valorHipoteticoTotal: string;
     bonusProxNegociacao: string;
   }
+  interface operation {
+    id: number;
+    ativo: string;
+    qtde: string;
+    pm: string;
+    total: string;
+  }
+  //Variável de controle da tab
+  const [tab, setTab] = useState("analise");
+
+  // Variaveis de controle do form
+  const [valorParaInvestir, setValorParaInvestir] = useState(0.0);
+  const [precoDoAtivo, setPrecoDoAtivo] = useState(0.0);
+  const [negativoBonus, setNegativoBonus] = useState(0);
+  const [ativo, setAtivo] = useState("");
+
+  // Variaveis da tabela
+  const [qtdeMaxAtivosComprados, setQtdeMaxAtivosComprados] = useState(0);
+  const [valorRealDaOperacao, setValorRealDaOperacao] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [tableControl, setTableControl] = useState(0);
+
+  // Variáveis de operação
+  const [operacoes, setOperacoes] = useState<operation[]>([]);
 
   const [residuosArray, setResiduosArray] = useState<ResidualInvestigation[]>(
     []
@@ -157,235 +173,304 @@ function App() {
 
   return (
     <>
-      <div>
-        <h1>Estratégia Residual para Fundos Imobiliários</h1>
-      </div>
-      <div>
-        <InputGroup className="mb-3">
-          <InputGroup.Text id="id-valor-disp">
-            Valor disponível para investir
-          </InputGroup.Text>
-          <NumericFormat
-            className="form-control"
-            id="id-valor-disp"
-            thousandSeparator="."
-            decimalSeparator=","
-            decimalScale={2}
-            prefix={"R$ "}
-            type="text"
-            value={valorParaInvestir}
-            onValueChange={(values) => {
-              const { value } = values;
-              setValorParaInvestir(Number(value));
-            }}
-          />
-        </InputGroup>
-        <InputGroup className="mb-3">
-          <InputGroup.Text id="id-preco">Preço do ativo</InputGroup.Text>
-          <NumericFormat
-            className="form-control"
-            id="id-preco"
-            thousandSeparator="."
-            decimalSeparator=","
-            decimalScale={2}
-            prefix={"R$ "}
-            type="text"
-            value={precoDoAtivo}
-            onValueChange={(values) => {
-              const { value } = values;
-              setPrecoDoAtivo(Number(value));
-            }}
-          />
-        </InputGroup>
-        <InputGroup className="mb-3">
-          <InputGroup.Text id="id-negativo">
-            Valor negativo da última negociação
-          </InputGroup.Text>
-          <NumericFormat
-            className="form-control"
-            id="id-negativo"
-            decimalScale={2}
-            thousandSeparator="."
-            decimalSeparator=","
-            prefix={"R$ "}
-            type="text"
-            value={negativoBonus}
-            onValueChange={(values) => {
-              const { value } = values;
-              setNegativoBonus(Number(value));
-            }}
-          />
-        </InputGroup>
-        <Button
-          variant="primary"
-          onClick={calculaPossiveisOperacoesResiduaisPositivas}
-        >
-          Calcular
-        </Button>
-      </div>
-      <br />
-      {!loading && residuosArray.length > 0 && tableControl === 1 && (
-        <>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th>Eu comprei</th>
-                <th>No preço</th>
-                <th>Pagando um valor real de </th>
-                <th>Utilizando o valor negativo bônus...</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{toFix(qtdeMaxAtivosComprados, 0)}</td>
-                <td>
-                  {precoDoAtivo.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </td>
-                <td>
-                  {(
-                    Number(toFix(qtdeMaxAtivosComprados, 0)) * precoDoAtivo
-                  ).toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </td>
-                <td>
-                  {negativoBonus.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </td>
-              </tr>
-            </tbody>
-          </Table>
+      <Tabs
+        defaultActiveKey={"analise"}
+        activeKey={tab}
+        onSelect={(k) => setTab(k ?? "")}
+        className="mb-3"
+      >
+        <Tab eventKey="analise" title="Análise">
+          <div>
+            <h1>Estratégia Residual para Fundos Imobiliários</h1>
+          </div>
           <br />
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-            }}
-          >
-            <Button variant="primary" onClick={calculaPossiveisSaidasComLoss}>
-              Checar tabela loss
+          <div>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="id-ativo">
+                Ativo a ser negociado
+              </InputGroup.Text>
+              <NumericFormat
+                className="form-control"
+                id="id-ativo"
+                type="text"
+                value={ativo}
+                onValueChange={(values) => {
+                  const { value } = values;
+                  setAtivo(value);
+                }}
+              />
+            </InputGroup>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="id-valor-disp">
+                Valor disponível para investir
+              </InputGroup.Text>
+              <NumericFormat
+                className="form-control"
+                id="id-valor-disp"
+                thousandSeparator="."
+                decimalSeparator=","
+                decimalScale={2}
+                prefix={"R$ "}
+                type="text"
+                value={valorParaInvestir}
+                onValueChange={(values) => {
+                  const { value } = values;
+                  setValorParaInvestir(Number(value));
+                }}
+              />
+            </InputGroup>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="id-preco">Preço do ativo</InputGroup.Text>
+              <NumericFormat
+                className="form-control"
+                id="id-preco"
+                thousandSeparator="."
+                decimalSeparator=","
+                decimalScale={2}
+                prefix={"R$ "}
+                type="text"
+                value={precoDoAtivo}
+                onValueChange={(values) => {
+                  const { value } = values;
+                  setPrecoDoAtivo(Number(value));
+                }}
+              />
+            </InputGroup>
+            <InputGroup className="mb-3">
+              <InputGroup.Text id="id-negativo">
+                Valor negativo da última negociação
+              </InputGroup.Text>
+              <NumericFormat
+                className="form-control"
+                id="id-negativo"
+                decimalScale={2}
+                thousandSeparator="."
+                decimalSeparator=","
+                prefix={"R$ "}
+                type="text"
+                value={negativoBonus}
+                onValueChange={(values) => {
+                  const { value } = values;
+                  setNegativoBonus(Number(value));
+                }}
+              />
+            </InputGroup>
+            <Button
+              variant="primary"
+              onClick={calculaPossiveisOperacoesResiduaisPositivas}
+            >
+              Calcular
             </Button>
-            <Button variant="primary">Saída custom</Button>
+          </div>
+          <br />
+          {!loading && residuosArray.length > 0 && tableControl === 1 && (
+            <>
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>Eu comprei</th>
+                    <th>No preço</th>
+                    <th>Pagando um valor real de </th>
+                    <th>Utilizando o valor negativo bônus</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{toFix(qtdeMaxAtivosComprados, 0)}</td>
+                    <td>
+                      {precoDoAtivo.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                    <td>
+                      {(
+                        Number(toFix(qtdeMaxAtivosComprados, 0)) * precoDoAtivo
+                      ).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                    <td>
+                      {negativoBonus.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                    <td>
+                      <Button
+                        variant="primary"
+                        onClick={() => setTab("operacoes")}
+                      >
+                        Registrar Operação
+                      </Button>
+                    </td>
+                  </tr>
+                </tbody>
+              </Table>
+              <br />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-evenly",
+                }}
+              >
+                <Button
+                  variant="primary"
+                  onClick={calculaPossiveisSaidasComLoss}
+                >
+                  Checar tabela loss
+                </Button>
+                <Button variant="primary">Saída custom</Button>
+              </div>
+              <br />
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>Se eu vender</th>
+                    <th>No preço</th>
+                    <th>Pagarei</th>
+                    <th>Bônus para próxima negociação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {residuosArray.map((resid: any, index: number) => (
+                    <tr key={index}>
+                      <td>{resid.qtdeAtivo}</td>
+                      <td>{resid.valorHipoteticoDoAtivo}</td>
+                      <td>{resid.valorHipoteticoTotal}</td>
+                      <td>{resid.bonusProxNegociacao}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </>
+          )}
+          {!loading && lossArray.length > 0 && tableControl === 2 && (
+            <>
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>Eu comprei</th>
+                    <th>No preço</th>
+                    <th>Pagando um valor real de </th>
+                    <th>Utilizando o valor negativo bônus...</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{toFix(qtdeMaxAtivosComprados, 0)}</td>
+                    <td>
+                      {precoDoAtivo.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                    <td>
+                      {(
+                        Number(toFix(qtdeMaxAtivosComprados, 0)) * precoDoAtivo
+                      ).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                    <td>
+                      {negativoBonus.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                  </tr>
+                </tbody>
+              </Table>
+              <br />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-evenly",
+                }}
+              >
+                <Button
+                  variant="primary"
+                  onClick={calculaPossiveisOperacoesResiduaisPositivas}
+                >
+                  Checar tabela de win
+                </Button>
+                <Button variant="primary">Saída custom</Button>
+              </div>
+              <br />
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>Se eu vender</th>
+                    <th>No preço</th>
+                    <th>Pagarei</th>
+                    <th>Bônus para próxima negociação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lossArray.map((loss: LossInvestigation, index: number) => (
+                    <tr key={index}>
+                      <td>{qtdeMaxAtivosComprados}</td>
+                      <td>{loss.valorHipoteticoDoAtivo}</td>
+                      <td>{loss.valorHipoteticoTotal}</td>
+                      <td>{loss.bonusProxNegociacao}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </>
+          )}
+          {/* Renderizar mensagem de carregando se loading for true e não houver resultados */}
+          {loading && residuosArray.length === 0 && (
+            <>
+              <br />
+              <div>Carregando...</div>
+            </>
+          )}
+          {/* Renderizar mensagem de nenhum resultado se não estiver carregando e não houver resultados */}
+          {!loading &&
+            ((residuosArray.length === 0 && tableControl === 1) ||
+              (lossArray.length === 0 && tableControl === 2)) && (
+              <div>Nenhum resultado encontrado.</div>
+            )}
+        </Tab>
+        <Tab eventKey="operacoes" title="Operações">
+          <div>
+            <h1>Operações em andamento</h1>
           </div>
           <br />
           <Table striped bordered hover>
             <thead>
               <tr>
-                <th>Se eu vender</th>
-                <th>No preço</th>
-                <th>Pagarei</th>
-                <th>Bônus para próxima negociação</th>
+                <th>Ativo</th>
+                <th>Quantidade</th>
+                <th>No preço médio</th>
+                <th>Totalizando</th>
+                {/*<th>Preço atual de mercado</th>*/}
+                {/*<th>Situação (loss/win)</th>*/}
+                {/*<th>Açõs: Registrar saída | Comprar</th>*/}
+                {/*<th>V</th> - vai abrir uma área mostrando as operações abaixo do ativo, se houver mais de uma. Cada uma das operações vai ter uma opção de "Alterar"*/}
               </tr>
             </thead>
             <tbody>
-              {residuosArray.map((resid: any, index: number) => (
+              {/*residuosArray.map((resid: any, index: number) => (
                 <tr key={index}>
                   <td>{resid.qtdeAtivo}</td>
                   <td>{resid.valorHipoteticoDoAtivo}</td>
                   <td>{resid.valorHipoteticoTotal}</td>
                   <td>{resid.bonusProxNegociacao}</td>
                 </tr>
-              ))}
+              ))*/}
             </tbody>
           </Table>
-        </>
-      )}
-      {!loading && lossArray.length > 0 && tableControl === 2 && (
-        <>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th>Eu comprei</th>
-                <th>No preço</th>
-                <th>Pagando um valor real de </th>
-                <th>Utilizando o valor negativo bônus...</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{toFix(qtdeMaxAtivosComprados, 0)}</td>
-                <td>
-                  {precoDoAtivo.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </td>
-                <td>
-                  {(
-                    Number(toFix(qtdeMaxAtivosComprados, 0)) * precoDoAtivo
-                  ).toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </td>
-                <td>
-                  {negativoBonus.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </td>
-              </tr>
-            </tbody>
-          </Table>
-          <br />
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-            }}
-          >
-            <Button
-              variant="primary"
-              onClick={calculaPossiveisOperacoesResiduaisPositivas}
-            >
-              Checar tabela de win
-            </Button>
-            <Button variant="primary">Saída custom</Button>
-          </div>
-          <br />
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th>Se eu vender</th>
-                <th>No preço</th>
-                <th>Pagarei</th>
-                <th>Bônus para próxima negociação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lossArray.map((loss: LossInvestigation, index: number) => (
-                <tr key={index}>
-                  <td>{qtdeMaxAtivosComprados}</td>
-                  <td>{loss.valorHipoteticoDoAtivo}</td>
-                  <td>{loss.valorHipoteticoTotal}</td>
-                  <td>{loss.bonusProxNegociacao}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </>
-      )}
-      {/* Renderizar mensagem de carregando se loading for true e não houver resultados */}
-      {loading && residuosArray.length === 0 && (
-        <>
-          <br />
-          <div>Carregando...</div>
-        </>
-      )}
-      {/* Renderizar mensagem de nenhum resultado se não estiver carregando e não houver resultados */}
-      {!loading &&
-        ((residuosArray.length === 0 && tableControl === 1) ||
-          (lossArray.length === 0 && tableControl === 2)) && (
-          <div>Nenhum resultado encontrado.</div>
-        )}
+        </Tab>
+        <Tab eventKey="manual" title="Manual"></Tab>
+        <Tab eventKey="sobre" title="Sobre"></Tab>
+      </Tabs>
     </>
   );
 }
