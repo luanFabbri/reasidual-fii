@@ -1,6 +1,6 @@
 ~~~~
 > "Operações"
-	> Enviar as informações para a tab "Operações" após pressionar "Operação executada"
+	(OK) Enviar as informações para a tab "Operações" após pressionar "Operação executada"
 	> Salvar localmente operações executadas.
 	> Criar lógica para que novas operações para um ativo já existente modifiquem a operação na tabela de operações, e não crie uma operação nova.
 	> Modificar tabelas com valores de "preço médio" caso já exista uma operação aberta para o ativo sendo analisado.

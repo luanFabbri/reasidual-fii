@@ -21,12 +21,13 @@ function App() {
     bonusProxNegociacao: string;
   }
   interface operation {
-    id: number;
     ativo: string;
     qtde: string;
-    pm: string;
+    preco: string;
     total: string;
+    ativa: boolean;
   }
+
   //Variável de controle da tab
   const [tab, setTab] = useState("analise");
 
@@ -208,6 +209,63 @@ function App() {
     return;
   };
 
+  const oficializaOperacao = async () => {
+    const tempOperationsArray: operation[] = operacoes;
+
+    let ativoAux = ativo;
+    let precoDoAtivoAux = precoDoAtivo.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+    let qtdeAux = toFix(qtdeMaxAtivosComprados, 0).toString();
+
+    let totalAux = (
+      Number(toFix(qtdeMaxAtivosComprados, 0)) * precoDoAtivo
+    ).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+
+    //Nesse array temos todas as operações
+    tempOperationsArray.push({
+      ativo: ativoAux,
+      qtde: qtdeAux,
+      preco: precoDoAtivoAux,
+      total: totalAux,
+      ativa: true,
+    });
+
+    setOperacoes(tempOperationsArray);
+    setTab("operacoes");
+    return;
+
+    /*
+    // Procura no array se já existe um ativo com movimento aberto
+    const index = tempOperationsArray.findIndex(
+      (operation) => operation.ativo === ativoAux
+    );
+
+
+
+    // Verificar se o item foi encontrado
+    if (index !== -1) {
+      const itemEncontrado = tempOperationsArray[index];
+      tempOperationsArray.push({
+        ativo: ativoAux,
+        qtde: (Number(qtdeAux) + Number(itemEncontrado.qtde)).toString(),
+        preco: 
+        total: (qtdeMaxAtivosComprados * precoDoAtivo).toString(),
+      });
+    } else {
+      tempOperationsArray.push({
+        ativo: ativoAux,
+        qtde: qtdeAux,
+        preco: precoDoAtivoAux,
+        total: totalAux,
+      });
+    }*/
+  };
+
   return (
     <>
       <Tabs
@@ -334,10 +392,7 @@ function App() {
                       })}
                     </td>
                     <td>
-                      <Button
-                        variant="primary"
-                        onClick={() => setTab("operacoes")}
-                      >
+                      <Button variant="primary" onClick={oficializaOperacao}>
                         Registrar Operação
                       </Button>
                     </td>
@@ -490,7 +545,7 @@ function App() {
               <tr>
                 <th>Ativo</th>
                 <th>Quantidade</th>
-                <th>No preço médio</th>
+                <th>No preço</th>
                 <th>Totalizando</th>
                 {/*<th>Preço atual de mercado</th>*/}
                 {/*<th>Situação (loss/win)</th>*/}
@@ -499,14 +554,14 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {/*residuosArray.map((resid: any, index: number) => (
+              {operacoes.map((operacao: operation, index: number) => (
                 <tr key={index}>
-                  <td>{resid.qtdeAtivo}</td>
-                  <td>{resid.valorHipoteticoDoAtivo}</td>
-                  <td>{resid.valorHipoteticoTotal}</td>
-                  <td>{resid.bonusProxNegociacao}</td>
+                  <td>{operacao.ativo}</td>
+                  <td>{operacao.qtde}</td>
+                  <td>{operacao.preco}</td>
+                  <td>{operacao.total}</td>
                 </tr>
-              ))*/}
+              ))}
             </tbody>
           </Table>
         </Tab>
