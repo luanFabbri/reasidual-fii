@@ -5,7 +5,7 @@ import Button from "react-bootstrap/Button";
 import InputGroup from "react-bootstrap/InputGroup";
 import Table from "react-bootstrap/Table";
 import { NumericFormat } from "react-number-format";
-import { Tab, Tabs } from "react-bootstrap";
+import { FormControl, Tab, Tabs } from "react-bootstrap";
 
 function App() {
   //Interfaces
@@ -36,11 +36,14 @@ function App() {
   const [negativoBonus, setNegativoBonus] = useState(0);
   const [ativo, setAtivo] = useState("");
 
+  //Variáveis de validação
+  const [msgValidacao, setMsgValidacao] = useState("");
+
   // Variaveis da tabela
   const [qtdeMaxAtivosComprados, setQtdeMaxAtivosComprados] = useState(0);
   const [valorRealDaOperacao, setValorRealDaOperacao] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [tableControl, setTableControl] = useState(0);
+  const [tableControl, setTableControl] = useState(0); // Determina se será mostrado tabela de win ou de loss
 
   // Variáveis de operação
   const [operacoes, setOperacoes] = useState<operation[]>([]);
@@ -62,6 +65,38 @@ function App() {
     } else {
       return "";
     }
+  };
+
+  const validacao = async () => {
+    setMsgValidacao("");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (ativo === "") {
+      setMsgValidacao(
+        'o campo "Ativo a ser negociado" precisa ser preenchido.'
+      );
+      return false;
+    }
+    if (valorParaInvestir <= 0 || valorParaInvestir === null) {
+      setMsgValidacao(
+        'o campo "Valor disponível para investir" precisa ser preenchido.'
+      );
+      return false;
+    }
+    if (precoDoAtivo <= 0 || precoDoAtivo === null) {
+      setMsgValidacao('o campo "Preço do ativo" precisa ser preenchido.');
+      return false;
+    }
+    if (valorParaInvestir < precoDoAtivo) {
+      setMsgValidacao(
+        '"Preço do ativo" não pode ser menor do que "Valor para investir".'
+      );
+      return false;
+    }
+    if (Number(toFix(valorParaInvestir / precoDoAtivo, 0)) === 1) {
+      setMsgValidacao("A estratégia não funciona comprando apenas um ativo.");
+      return false;
+    }
+    return true;
   };
 
   const calculaPossiveisSaidasComLoss = async () => {
@@ -103,6 +138,7 @@ function App() {
   };
 
   const calculaPossiveisOperacoesResiduaisPositivas = async () => {
+    if (!validacao()) return;
     setLoading(true);
     setTableControl(1);
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -122,6 +158,7 @@ function App() {
     let valorDeVendaAux: number = 0;
     let qtdeVendaAux: number = 0;
     let precoDoAtivoComAcrescimoAux: number = 0;
+
     for (
       let qtdeHipoteticaDeVenda = QtdeMaxAtivosCompradosAux - 1;
       qtdeHipoteticaDeVenda >= 0;
@@ -178,6 +215,7 @@ function App() {
         activeKey={tab}
         onSelect={(k) => setTab(k ?? "")}
         className="mb-3"
+        style={{ width: "75vw" }}
       >
         <Tab eventKey="analise" title="Análise">
           <div>
@@ -189,15 +227,12 @@ function App() {
               <InputGroup.Text id="id-ativo">
                 Ativo a ser negociado
               </InputGroup.Text>
-              <NumericFormat
-                className="form-control"
-                id="id-ativo"
+              <FormControl
                 type="text"
+                placeholder="ABCD11"
+                id="id-ativo"
                 value={ativo}
-                onValueChange={(values) => {
-                  const { value } = values;
-                  setAtivo(value);
-                }}
+                onChange={(e) => setAtivo(e.target.value)}
               />
             </InputGroup>
             <InputGroup className="mb-3">
@@ -424,8 +459,14 @@ function App() {
               </Table>
             </>
           )}
+          {msgValidacao !== "" && (
+            <>
+              <br />
+              <div>{msgValidacao}</div>
+            </>
+          )}
           {/* Renderizar mensagem de carregando se loading for true e não houver resultados */}
-          {loading && residuosArray.length === 0 && (
+          {msgValidacao === "" && loading && residuosArray.length === 0 && (
             <>
               <br />
               <div>Carregando...</div>
@@ -433,6 +474,7 @@ function App() {
           )}
           {/* Renderizar mensagem de nenhum resultado se não estiver carregando e não houver resultados */}
           {!loading &&
+            msgValidacao === "" &&
             ((residuosArray.length === 0 && tableControl === 1) ||
               (lossArray.length === 0 && tableControl === 2)) && (
               <div>Nenhum resultado encontrado.</div>

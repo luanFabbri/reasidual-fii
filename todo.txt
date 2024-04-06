@@ -25,3 +25,6 @@
 
 ~~~~
 > Criar tab "Sobre"
+
+~~~~
+> Criar método para compra de apenas um ativo, removendo a validação
