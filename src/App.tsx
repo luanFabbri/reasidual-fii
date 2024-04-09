@@ -36,6 +36,7 @@ function App() {
   const [precoDoAtivo, setPrecoDoAtivo] = useState(0.0);
   const [negativoBonus, setNegativoBonus] = useState(0);
   const [ativo, setAtivo] = useState("");
+  const [emolumentos, setEmolumentos] = useState(0.03 / 100);
 
   //Variáveis de validação
   const [msgValidacao, setMsgValidacao] = useState("");
@@ -54,7 +55,7 @@ function App() {
   );
   const [lossArray, setLossArray] = useState<LossInvestigation[]>([]);
 
-  useEffect(() => {}, [residuosArray, valorRealDaOperacao]);
+  // useEffect(() => {}, [residuosArray, valorRealDaOperacao]);
 
   const toFix = (n: number, fixed: number): string => {
     const matchResult = `${n}`.match(
@@ -101,15 +102,19 @@ function App() {
   };
 
   const calculaPossiveisSaidasComLoss = async () => {
-    setLoading(true);
-    setTableControl(2);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const limiteInferiorDaTabela = precoDoAtivo * 0.9;
+    // Inicializando variaveis
+    let limiteInferiorDaTabela = precoDoAtivo * 0.9; // limiteInferiorDaTabela é o valor até onde o for() rodará mostrando possíveis operações
     let tempLossArray = [];
     let QtdeMaxAtivosCompradosAux = Number(
       toFix(valorParaInvestir / precoDoAtivo, 0)
     );
     let ValorRealDaOperacaoAux = QtdeMaxAtivosCompradosAux * precoDoAtivo;
+
+    setLoading(true);
+
+    // TableControl === 2 significa que mostrará a tabela para loss.
+    setTableControl(2);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     for (
       let valorComLoss = precoDoAtivo - 0.01;
@@ -133,32 +138,36 @@ function App() {
         ).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
       });
     }
+
     setLossArray(tempLossArray);
     setLoading(false);
     return;
   };
 
   const calculaPossiveisOperacoesResiduaisPositivas = async () => {
-    if (!validacao()) return;
-    setLoading(true);
-    setTableControl(1);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const limiteSuperiorDaTabela = precoDoAtivo * 1.1;
+    // Inicializando variaveis
     let tempResiduosArray = [];
-
-    setQtdeMaxAtivosComprados(valorParaInvestir / precoDoAtivo);
-    setValorRealDaOperacao(qtdeMaxAtivosComprados * precoDoAtivo);
     let QtdeMaxAtivosCompradosAux = Number(
       toFix(valorParaInvestir / precoDoAtivo, 0)
     );
     let ValorRealDaOperacaoAux = QtdeMaxAtivosCompradosAux * precoDoAtivo;
-
-    const valorRealComBonus = ValorRealDaOperacaoAux + negativoBonus;
-
+    let valorRealComBonus = ValorRealDaOperacaoAux + negativoBonus;
     let valorDeVendaAux: number = 0;
     let qtdeVendaAux: number = 0;
     let precoDoAtivoComAcrescimoAux: number = 0;
+    let limiteSuperiorDaTabela = precoDoAtivo * 1.1; // limiteSuperiorDaTabela é o valor até onde o for() rodará mostrando possíveis operações
+
+    // Setando valores
+    setQtdeMaxAtivosComprados(valorParaInvestir / precoDoAtivo);
+    setValorRealDaOperacao(qtdeMaxAtivosComprados * precoDoAtivo);
+
+    // Validações
+    if (!validacao()) return;
+    setLoading(true);
+
+    // TableControl === 1 significa que mostrará a tabela para win.
+    setTableControl(1);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     for (
       let qtdeHipoteticaDeVenda = QtdeMaxAtivosCompradosAux - 1;
@@ -363,7 +372,9 @@ function App() {
                   <tr>
                     <th>Eu comprei</th>
                     <th>No preço</th>
-                    <th>Pagando um valor real de </th>
+                    <th>Pagando na operação</th>
+                    <th>Considerando os emolumentos de</th>
+                    <th>Resultando em um valor final de</th>
                     <th>Utilizando o valor negativo bônus</th>
                     <th>Ações</th>
                   </tr>
@@ -380,6 +391,28 @@ function App() {
                     <td>
                       {(
                         Number(toFix(qtdeMaxAtivosComprados, 0)) * precoDoAtivo
+                      ).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                    <td>
+                      {emolumentos * 100}% (
+                      {(
+                        Number(toFix(qtdeMaxAtivosComprados, 0)) *
+                        precoDoAtivo *
+                        emolumentos
+                      ).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                      )
+                    </td>
+                    <td>
+                      {(
+                        Number(toFix(qtdeMaxAtivosComprados, 0)) *
+                        precoDoAtivo *
+                        (1 + emolumentos)
                       ).toLocaleString("pt-BR", {
                         style: "currency",
                         currency: "BRL",

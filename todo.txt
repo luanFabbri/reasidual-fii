@@ -1,4 +1,7 @@
 ~~~~
+> Adicionar "Taxas e emolumentos". considerar 0.03%, 0,005% na negociação + 0,025% na liquidação.
+
+~~~~
 > "Operações"
 	(OK) Enviar as informações para a tab "Operações" após pressionar "Operação executada"
 	> Salvar localmente operações executadas.
