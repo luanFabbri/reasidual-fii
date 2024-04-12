@@ -1,14 +1,16 @@
 ~~~~
-> Adicionar "Taxas e emolumentos". considerar 0.03%, 0,005% na negociação + 0,025% na liquidação.
+(OK) Adicionar "Taxas e emolumentos". considerar 0.03%, 0,005% na negociação + 0,025% na liquidação.
 
 ~~~~
 > "Operações"
 	(OK) Enviar as informações para a tab "Operações" após pressionar "Operação executada"
-	> Salvar localmente operações executadas.
-	> Criar lógica para que novas operações para um ativo já existente modifiquem a operação na tabela de operações, e não crie uma operação nova.
-	> Modificar tabelas com valores de "preço médio" caso já exista uma operação aberta para o ativo sendo analisado.
+	> Criar tabela que mostre a operação total, com a opção de exibição das operações individuais.
+  > Salvar localmente operações executadas.	
 > Criar capacidade de modificar a operação na tab de operações
 > Criar "Histórico"
+
+~~~~
+> Criar novos arquivos, dividindo as tabs e criando componentes para os botões e inputs
 
 ~~~~
 > Criar "Saída Custom" que abrange valores e quantidades fora da tabela, tanto pra win quanto pra loss
