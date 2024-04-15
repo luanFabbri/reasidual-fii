@@ -1,3 +1,5 @@
+> A tabela na página inicial está incorreta. Ela deve considerar os emolumentos, fazendo com que o valor final não exceda o total com eles.
+
 ~~~~
 (OK) Adicionar "Taxas e emolumentos". considerar 0.03%, 0,005% na negociação + 0,025% na liquidação.
 

@@ -10,17 +10,32 @@ import React from "react";
 
 function App() {
   //Interfaces
+  interface Configurations {
+    bonusNegativo: number;
+    emolumentos: number;
+  }
+
   interface ResidualInvestigation {
     qtdeAtivo: string;
     valorHipoteticoDoAtivo: string;
     valorHipoteticoTotal: string;
     bonusProxNegociacao: string;
   }
+
   interface LossInvestigation {
     valorHipoteticoDoAtivo: string;
     valorHipoteticoTotal: string;
     bonusProxNegociacao: string;
   }
+
+  interface OperationInvestigation {
+    ativo: string;
+    qtde: number;
+    preco: number;
+    valor: number;
+    emolumentos: number;
+  }
+
   interface Operation {
     ativo: string;
     qtde: number;
@@ -30,6 +45,7 @@ function App() {
     data: string;
     ativa: boolean;
   }
+
   interface MasterOperation {
     ativo: string;
     numOperacoesAtivas: number;
@@ -45,7 +61,6 @@ function App() {
   // Variaveis de controle do form
   const [valorParaInvestir, setValorParaInvestir] = useState(0.0);
   const [precoDoAtivo, setPrecoDoAtivo] = useState(0.0);
-  const [negativoBonus, setNegativoBonus] = useState(0);
   const [ativo, setAtivo] = useState("");
   const [pgtoPorEmolumentos, setPgtoPorEmolumentos] = useState(0);
 
@@ -56,17 +71,19 @@ function App() {
   const [qtdeMaxAtivosComprados, setQtdeMaxAtivosComprados] = useState(0); // toFix((valorParaInvestir / precoDoAtivo),0)
   const [valorRealDaOperacao, setValorRealDaOperacao] = useState(0); // qtdeMaxAtivosComprados * precoDoAtivo
   const [valorFinal, setValorFinal] = useState(0); // qtdeMaxAtivosComprados * precoDoAtivo * (1 + emolumentos)
+  const [lossArray, setLossArray] = useState<LossInvestigation[]>([]);
   const [residuosArray, setResiduosArray] = useState<ResidualInvestigation[]>(
     []
   );
-  const [lossArray, setLossArray] = useState<LossInvestigation[]>([]);
 
   // Variáveis de controle
   const [loading, setLoading] = useState(false);
   const [tableControl, setTableControl] = useState(0); // Determina se será mostrado tabela de win ou de loss
 
   // Variáveis de configuração
-  const [emolumentos, setEmolumentos] = useState(0.03 / 100);
+  const [configurationsArray, setConfiguratrionsArray] = useState<
+    Configurations[]
+  >([{ bonusNegativo: 0, emolumentos: 0.03 / 100 }]);
 
   // Variáveis de operação
   const [operacoes, setOperacoes] = useState<Operation[]>([]); // possui todas as operações, ativas e inativas
@@ -166,49 +183,35 @@ function App() {
     if (!validacao()) return;
     setLoading(true);
 
-    // Setando valores para usar na tabela externa
-    setQtdeMaxAtivosComprados(
-      Number(toFix(valorParaInvestir / precoDoAtivo, 0))
-    );
-    setValorRealDaOperacao(
-      Number(toFix(valorParaInvestir / precoDoAtivo, 0)) * precoDoAtivo
-    );
-    setValorFinal(
-      Number(
-        toFix(
-          (Number(toFix(valorParaInvestir / precoDoAtivo, 0)) * precoDoAtivo) /
-            precoDoAtivo,
-          0
-        )
-      ) *
-        precoDoAtivo *
-        (1 + emolumentos)
-    );
-    setPgtoPorEmolumentos(
-      Number(
-        toFix(
-          Number(toFix(valorParaInvestir / precoDoAtivo, 0)) * precoDoAtivo,
-          2
-        )
-      ) * emolumentos
-    );
-
-    // Inicializando variaveis
+    // Setando valores e variáveis
     let qtdeMaxAtivosCompradosAux = Number(
       toFix(valorParaInvestir / precoDoAtivo, 0)
     );
-    let valorRealDaOperacaoAux =
-      Number(toFix(valorParaInvestir / precoDoAtivo, 0)) * precoDoAtivo;
+
+    let valorRealDaOperacaoAux = qtdeMaxAtivosCompradosAux * precoDoAtivo;
+
     let pgtoPorEmolumentosAux =
-      Number(
-        toFix(
-          Number(toFix(valorParaInvestir / precoDoAtivo, 0)) * precoDoAtivo,
-          2
-        )
-      ) * emolumentos;
-    let tempResiduosArray = [];
-    let valorRealComBonus =
-      valorRealDaOperacaoAux + negativoBonus + pgtoPorEmolumentosAux;
+      valorRealDaOperacaoAux * configurationsArray[0].emolumentos;
+
+    let tempResiduosArray: ResidualInvestigation[] = [];
+    let valorRealComBonus = valorRealDaOperacaoAux + pgtoPorEmolumentosAux;
+
+    while (
+      qtdeMaxAtivosCompradosAux * precoDoAtivo + pgtoPorEmolumentosAux >
+      valorParaInvestir
+    ) {
+      qtdeMaxAtivosCompradosAux--;
+      valorRealDaOperacaoAux = qtdeMaxAtivosCompradosAux * precoDoAtivo;
+      pgtoPorEmolumentosAux =
+        valorRealDaOperacaoAux * configurationsArray[0].emolumentos;
+      valorRealComBonus = valorRealDaOperacaoAux + pgtoPorEmolumentosAux;
+    } // essa lógica faz com que você nunca pague mais do que tem pra investir por causa de emolumentos
+    setQtdeMaxAtivosComprados(qtdeMaxAtivosCompradosAux);
+    setPgtoPorEmolumentos(pgtoPorEmolumentosAux);
+    setValorRealDaOperacao(valorRealDaOperacaoAux);
+    setValorFinal(
+      qtdeMaxAtivosCompradosAux * precoDoAtivo + pgtoPorEmolumentosAux
+    );
     let valorDeVendaAux: number = 0;
     let qtdeVendaAux: number = 0;
     let precoDoAtivoComAcrescimoAux: number = 0;
@@ -266,7 +269,7 @@ function App() {
     let precoDoAtivoAux = precoDoAtivo;
     let qtdeAux = qtdeMaxAtivosComprados;
     let emolumentos = pgtoPorEmolumentos;
-    let totalAux = valorFinal;
+    let totalAux = qtdeMaxAtivosComprados * precoDoAtivo;
     let date = new Date();
     let today = `${date.getDate()}/${
       date.getMonth() + 1
@@ -277,47 +280,45 @@ function App() {
       ativo: ativoAux,
       qtde: qtdeAux,
       preco: precoDoAtivoAux,
-      emolumentos: emolumentos,
+      emolumentos: Number(toFix(emolumentos, 2)),
       total: totalAux,
       data: today,
       ativa: true,
     });
 
     // Agrupar as entradas por ativo e calcular as somas e a média
-    const tempMasterOperationsArray: MasterOperation[] = Object.values(
-      tempOperationsArray.reduce(
-        (acc, cur) => {
-          if (cur.ativa) {
-            if (!acc[cur.ativo]) {
-              acc[cur.ativo] = {
-                ativo: cur.ativo,
-                qtde: cur.qtde,
-                pm: cur.preco * cur.qtde,
-                valorTotal: cur.total,
-                totalEmolumentos: cur.emolumentos,
-                numOperacoesAtivas: 1,
-              };
-            } else {
-              acc[cur.ativo].qtde += cur.qtde;
-              acc[cur.ativo].pm += cur.preco * cur.qtde;
-              acc[cur.ativo].valorTotal += cur.total;
-              acc[cur.ativo].numOperacoesAtivas++;
-              acc[cur.ativo].totalEmolumentos += cur.emolumentos;
-            }
+    const tempMasterOperationsArray: MasterOperation[] = Object.entries(
+      tempOperationsArray.reduce<{
+        [key: string]: {
+          ativo: string;
+          qtde: number;
+          pm: number;
+          valorTotal: number;
+          totalEmolumentos: number;
+          numOperacoesAtivas: number;
+        };
+      }>((acc, cur) => {
+        if (cur.ativa) {
+          if (!acc[cur.ativo]) {
+            acc[cur.ativo] = {
+              ativo: cur.ativo,
+              qtde: cur.qtde,
+              pm: cur.preco * cur.qtde,
+              valorTotal: cur.total,
+              totalEmolumentos: cur.emolumentos,
+              numOperacoesAtivas: 1,
+            };
+          } else {
+            acc[cur.ativo].qtde += cur.qtde;
+            acc[cur.ativo].pm += cur.preco * cur.qtde;
+            acc[cur.ativo].valorTotal += cur.total;
+            acc[cur.ativo].numOperacoesAtivas++;
+            acc[cur.ativo].totalEmolumentos += cur.emolumentos;
           }
-          return acc;
-        },
-        {} as {
-          [key: string]: {
-            ativo: string;
-            qtde: number;
-            pm: number;
-            valorTotal: number;
-            numOperacoesAtivas: number;
-          };
         }
-      )
-    );
+        return acc;
+      }, {})
+    ).map(([_, value]) => value);
 
     // Calcular a média do preço por ativo
     tempMasterOperationsArray.forEach((operation) => {
@@ -393,25 +394,6 @@ function App() {
                 }}
               />
             </InputGroup>
-            <InputGroup className="mb-3">
-              <InputGroup.Text id="id-negativo">
-                Valor negativo da última negociação
-              </InputGroup.Text>
-              <NumericFormat
-                className="form-control"
-                id="id-negativo"
-                decimalScale={2}
-                thousandSeparator="."
-                decimalSeparator=","
-                prefix={"R$ "}
-                type="text"
-                value={negativoBonus}
-                onValueChange={(values) => {
-                  const { value } = values;
-                  setNegativoBonus(Number(value));
-                }}
-              />
-            </InputGroup>
             <Button
               variant="primary"
               onClick={calculaPossiveisOperacoesResiduaisPositivas}
@@ -430,7 +412,6 @@ function App() {
                     <th>Pagando na operação</th>
                     <th>Considerando os emolumentos de</th>
                     <th>Resultando em um valor final de</th>
-                    <th>Utilizando o valor negativo bônus</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -440,10 +421,10 @@ function App() {
                     <td>{toReal(precoDoAtivo)}</td>
                     <td>{toReal(valorRealDaOperacao)}</td>
                     <td>
-                      {emolumentos * 100}% ({toReal(pgtoPorEmolumentos)})
+                      {configurationsArray[0].emolumentos * 100}% (
+                      {toReal(Number(toFix(pgtoPorEmolumentos, 2)))})
                     </td>
                     <td>{toReal(valorFinal)}</td>
-                    <td>{toReal(negativoBonus)}</td>
                     <td>
                       <Button variant="primary" onClick={oficializaOperacao}>
                         Registrar Operação
@@ -499,7 +480,6 @@ function App() {
                     <th>Eu comprei</th>
                     <th>No preço</th>
                     <th>Pagando um valor real de </th>
-                    <th>Utilizando o valor negativo bônus...</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -511,7 +491,6 @@ function App() {
                         Number(toFix(qtdeMaxAtivosComprados, 0)) * precoDoAtivo
                       )}
                     </td>
-                    <td>{toReal(negativoBonus)}</td>
                   </tr>
                 </tbody>
               </Table>
@@ -588,6 +567,8 @@ function App() {
                 <th>Quantidade</th>
                 <th>Preço Médio</th>
                 <th>Valor Total Investido</th>
+                <th>Total Emolumentos</th>
+                <th>Valor Total + emolumentos</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -599,8 +580,15 @@ function App() {
                       <td>{operacaoMestra.ativo}</td>
                       <td>{operacaoMestra.numOperacoesAtivas}</td>
                       <td>{operacaoMestra.qtde}</td>
-                      <td>{operacaoMestra.pm}</td>
-                      <td>{operacaoMestra.valorTotal}</td>
+                      <td>{toReal(operacaoMestra.pm)}</td>
+                      <td>{toReal(operacaoMestra.valorTotal)}</td>
+                      <td>{toReal(operacaoMestra.totalEmolumentos)}</td>
+                      <td>
+                        {toReal(
+                          operacaoMestra.valorTotal +
+                            operacaoMestra.totalEmolumentos
+                        )}
+                      </td>
                       <td>
                         <Button
                           variant="primary"
@@ -620,7 +608,9 @@ function App() {
                       <tr>
                         <th>Data</th>
                         <th>Quantidade</th>
-                        <th>Preço de execução</th>
+                        <th>Preço do ativo</th>
+                        <th>Valor da operação</th>
+                        <th>Emolumentos</th>
                         <th>Total</th>
                       </tr>
                     )}
@@ -634,8 +624,12 @@ function App() {
                           <tr key={subIndex}>
                             <td>{operacao.data}</td>
                             <td>{operacao.qtde}</td>
-                            <td>{operacao.preco}</td>
-                            <td>{operacao.total}</td>
+                            <td>{toReal(operacao.preco)}</td>
+                            <td>{toReal(operacao.total)}</td>
+                            <td>{toReal(operacao.emolumentos)}</td>
+                            <td>
+                              {toReal(operacao.total + operacao.emolumentos)}
+                            </td>
                           </tr>
                         ))}
                   </React.Fragment>
