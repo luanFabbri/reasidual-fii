@@ -1,7 +1,7 @@
 > "Operações"	
 	> Salvar localmente operações executadas.	
-	> Criar capacidade de modificar, encerrar ou executar saída a operação na tab de operações
-> Criar "Histórico"
+	> Criar capacidade de modificar a operação na tab de operações.
+	> Criar visualização da tabela de loss de saída das operações.
 
 ~~~~
 > Criar novos arquivos, dividindo as tabs e criando componentes para os botões e inputs
@@ -29,9 +29,6 @@
 > Criar método para compra de apenas um ativo, removendo a validação
 
 ~~~~
-> Padronizar nome das funções
-
-~~~~
 > Fazer com que as tabelas na página principal venha carregada com as informações relacionadas a operações em andamento, caso existam
 
 
@@ -40,3 +37,6 @@
 > (OK) Adicionar "Taxas e emolumentos". considerar 0.03%, 0,005% na negociação + 0,025% na liquidação.
 > (OK) Enviar as informações para a tab "Operações" após pressionar "Operação executada"
 > (OK) Criar tabela que mostre a operação total, com a opção de exibição das operações individuais.
+> (OK) Criar capacidade de executar saída da operação na tab de operações
+> (OK) Criar "Histórico"
+> (OK) Padronizar nome das funções

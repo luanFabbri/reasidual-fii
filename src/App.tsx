@@ -207,6 +207,16 @@ function App() {
     return;
   };
 
+  const limparArrays = () => {
+    setProfitOperations([]);
+    setLossOperations([]);
+    setAtivo("");
+    setPrecoDoAtivo(0);
+    setValorParaInvestir(0);
+    setTableControl(0);
+    return;
+  };
+
   const realizarAnalise = async () => {
     // Validações
     if (!validar()) return;
@@ -383,6 +393,8 @@ function App() {
     const masterOperationsArrayAux: MasterOperation[] =
       await atualizarMasterOperations(operationsArrayAux);
     setOperacoesMaster(masterOperationsArrayAux);
+    limparArrays();
+
     return;
   };
 
@@ -458,12 +470,7 @@ function App() {
     setOperacoes(tempOperationsArray);
 
     // Limpando os campos e o array de analise
-    setProfitOperations([]);
-    setLossOperations([]);
-    setAtivo("");
-    setPrecoDoAtivo(0);
-    setValorParaInvestir(0);
-    setTableControl(0);
+    await limparArrays();
 
     // Mudando de tab
     setTab("operacoes");
@@ -937,7 +944,7 @@ function App() {
                             )
                           }
                         >
-                          {linhaClicada === index
+                          {showDetailedHistory === index
                             ? "Ver Detalhes"
                             : "Esconder Detalhes"}
                         </Button>
