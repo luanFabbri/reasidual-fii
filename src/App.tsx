@@ -472,10 +472,7 @@ function App() {
     // Limpando os campos e o array de analise
     limparArrays();
 
-    console.log("operacoesMaster: ", operacoesMaster);
-    console.log("tempOperationsArray: ", tempOperationsArray);
-    console.log("mostraTabelaRegistrarSaida: ", mostraTabelaRegistrarSaida);
-    // Mudando de tab
+   // Mudando de tab
     setTab("operacoes");
     return;
   };
