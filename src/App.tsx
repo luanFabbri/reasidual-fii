@@ -470,8 +470,11 @@ function App() {
     setOperacoes(tempOperationsArray);
 
     // Limpando os campos e o array de analise
-    await limparArrays();
+    limparArrays();
 
+    console.log("operacoesMaster: ", operacoesMaster);
+    console.log("tempOperationsArray: ", tempOperationsArray);
+    console.log("mostraTabelaRegistrarSaida: ", mostraTabelaRegistrarSaida);
     // Mudando de tab
     setTab("operacoes");
     return;
